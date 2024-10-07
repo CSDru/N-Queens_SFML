@@ -1,0 +1,3 @@
+C:/Users/Dru/CLionProjects/N-Queens_SFML/cmake-build-debug/CMakeFiles/N-Queens_SFML.dir
+C:/Users/Dru/CLionProjects/N-Queens_SFML/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Dru/CLionProjects/N-Queens_SFML/cmake-build-debug/CMakeFiles/rebuild_cache.dir
