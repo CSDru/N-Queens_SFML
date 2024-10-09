@@ -5,17 +5,19 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "Body.h" // Ensure you include the Body header
-#include "View.h" // Ensure you include the View header
+#include "Model.h"
+#include "View.h"
 
-class Controller {
+class Controller
+{
 public:
-    Controller(); // Constructor declaration
-    void run(); // Method to start the application
+    Controller(int size);
+
+    void run();
 
 private:
-    Body body; // Instance of Body class to handle N-Queens logic
-    View view; // Instance of View class to handle display
+    Model model;
+    View view;
 };
 
 #endif // CONTROLLER_H

@@ -3,43 +3,124 @@
 //
 
 #include "Controller.h"
-#include "View.h"
-#include "Body.h"
+#include <SFML/System.hpp>
+#include <iostream>
 
-Controller::Controller() : body(8), view() { // You can change the size (8) as needed
-
+// Constructor
+Controller::Controller(int size)
+        : model(size), view(size)
+{
 }
 
-void Controller::run() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "N-Queens");
+void Controller::run()
+{
+    if (!model.solve())
+    {
+        std::cout << "No solutions found for N = " << model.getBoard().size() << std::endl;
+        return;
+    }
 
-    int boardSize = 8; // Set your desired board size
-    Body body(boardSize); // Create Body instance with the board size
-    body.solve(); // This should generate the solutions
+    const auto& solutions = model.getSolutions();
+    size_t current = 0;
+    size_t total = solutions.size();
 
-    int currentSolutionIndex = 0;
-    const auto& solutions = body.getSolutions();
-    int totalSolutions = solutions.size();
+    bool showDialog = false;
+    int selectedButton = 0; // 0: Yes, 1: No
 
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
+    while (view.isOpen())
+    {
+        // Handle all events
+        std::vector<sf::Event> events = view.handleEvents();
+        for (const auto& event : events)
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                showDialog = true;
+                selectedButton = 0;
             }
-            // Handle arrow keys for solution navigation
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Left) {
-                    currentSolutionIndex = (currentSolutionIndex - 1 + totalSolutions) % totalSolutions;
-                } else if (event.key.code == sf::Keyboard::Right) {
-                    currentSolutionIndex = (currentSolutionIndex + 1) % totalSolutions;
+            else if (event.type == sf::Event::KeyPressed)
+            {
+                if (!showDialog)
+                {
+                    if (event.key.code == sf::Keyboard::Right)
+                    {
+                        current = (current + 1) % total; // Wrap around to the first solution
+                    }
+                    else if (event.key.code == sf::Keyboard::Left)
+                    {
+                        current = (current == 0) ? total - 1 : current - 1; // Wrap around to the last solution
+                    }
+                    else if (event.key.code == sf::Keyboard::Escape)
+                    {
+                        showDialog = true;
+                        selectedButton = 0;
+                    }
+                }
+                else
+                {
+                    if (event.key.code == sf::Keyboard::Right)
+                    {
+                        selectedButton = (selectedButton + 1) % 2; // Navigate to the next button
+                    }
+                    else if (event.key.code == sf::Keyboard::Left)
+                    {
+                        selectedButton = (selectedButton - 1 + 2) % 2; // Navigate to the previous button
+                    }
+                    else if (event.key.code == sf::Keyboard::Enter)
+                    {
+                        if (selectedButton == 0) // Yes: Exit the program
+                        {
+                            view.handleEvents(); // Clear remaining events
+                            view.getWindow().close(); // Close the window
+                            return;
+                        }
+                        else if (selectedButton == 1) // No: Close the dialog and continue
+                        {
+                            showDialog = false;
+                        }
+                    }
+                    else if (event.key.code == sf::Keyboard::Escape)
+                    {
+                        showDialog = false; // Cancel the exit
+                    }
+                }
+            }
+            else if (event.type == sf::Event::MouseButtonPressed)
+            {
+                if (showDialog && event.mouseButton.button == sf::Mouse::Left)
+                {
+                    sf::Vector2f mousePos = view.getWindow().mapPixelToCoords(sf::Mouse::getPosition(view.getWindow()));
+                    if (view.isMouseOverButton(mousePos, view.getYesButton()))
+                    {
+                        view.getWindow().close(); // Close the window
+                        return;
+                    }
+                    else if (view.isMouseOverButton(mousePos, view.getNoButton()))
+                    {
+                        showDialog = false; // Close the dialog and continue
+                    }
+                }
+            }
+            else if (event.type == sf::Event::MouseMoved)
+            {
+                if (showDialog)
+                {
+                    sf::Vector2f mousePos = view.getWindow().mapPixelToCoords(sf::Mouse::getPosition(view.getWindow()));
+                    selectedButton = view.isMouseOverButton(mousePos, view.getYesButton()) ? 0 : 1;
                 }
             }
         }
 
-        window.clear();
-        view.drawQueens(window, body, currentSolutionIndex);
-        view.drawSolutionCount(window, currentSolutionIndex, totalSolutions);
-        window.display();
+        // Draw the current solution with or without the confirmation dialog
+        if (!showDialog)
+        {
+            view.draw(solutions[current], current, total, false, -1);
+        }
+        else
+        {
+            view.draw(solutions[current], current, total, true, selectedButton);
+        }
+
+        sf::sleep(sf::milliseconds(10)); // Optional: limit the loop
     }
 }

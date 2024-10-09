@@ -1,37 +1,26 @@
-#include <SFML/Graphics.hpp>
-#include <iostream>
 #include "Controller.h"
+#include <iostream>
 
 int main()
 {
-    // Create the main window
-    sf::RenderWindow window(sf::VideoMode(800, 600), "N-Queens Problem");
-
-    // Load font
-    sf::Font font;
-    if (!font.loadFromFile("C:/Users/Dru/CLionProjects/N-Queens_SFML/fonts/arial.ttf"))
+    int N;
+    std::cout << "Enter the number of queens (N): ";
+    std::cin >> N;
+    if (N <= 0)
     {
-        std::cerr << "Failed to load font" << std::endl;
-        return EXIT_FAILURE; // Exit if the font cannot be loaded
+        std::cerr << "N must be a positive integer." << std::endl;
+        return -1;
     }
 
-    // Create controller
-    Controller controller;
-    controller.run();
-
-    // Main loop
-    while (window.isOpen())
+    try
     {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
-
-        window.clear();
-        // Draw your game objects here
-        window.display();
+        Controller controller(N);
+        controller.run();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return -1;
     }
 
     return 0;
