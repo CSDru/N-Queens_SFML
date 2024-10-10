@@ -84,15 +84,17 @@ void View::drawBoard()
 
 void View::drawQueens(const std::vector<int>& board)
 {
-    sf::CircleShape queen(cellSize / 2 - 10, 100);
-    queen.setFillColor(queenColor);
+    sf::CircleShape queen(cellSize / 2 - 10, 100);  // Simple circle with radius based on cellSize
+    queen.setFillColor(queenColor);                 // Set the fill color to the queenColor
+
     for (int col = 0; col < static_cast<int>(board.size()); ++col)
     {
         int row = board[col];
         if (row != -1)
         {
-            queen.setPosition(col * cellSize + 10, row * cellSize + 10 - 5.0f); // Raised by 5 pixels
-            window.draw(queen);
+            // Position the queen circle in the center of each square
+            queen.setPosition(col * cellSize + (cellSize - queen.getRadius() * 2) / 2, row * cellSize + (cellSize - queen.getRadius() * 2) / 2);
+            window.draw(queen);  // Draw the queen circle
         }
     }
 }
@@ -102,143 +104,133 @@ void View::drawLabel(size_t current, size_t total)
 {
     // Position the label below the chessboard
     float labelX = 10.0f;
-    float labelY = N * cellSize + 30.0f; // Raised by 20 pixels
+    float labelY = N * cellSize + 30.0f; // Raised by 30 pixels
 
-    float digitSize = 30.0f; // Increased size
+    float digitSize = 30.0f; // Size of each digit
+    float spaceBetween = 10.0f; // Space between digits, can be adjusted as needed
 
-    // Draw "current / total"
-    // Example: "1/4"
+    // Calculate the width for the current number
+    std::string currentStr = std::to_string(current + 1);
+    float currentWidth = currentStr.length() * (digitSize);
+
+    // Calculate the width for the total number
+    std::string totalStr = std::to_string(total);
+    float totalWidth = totalStr.length() * (digitSize);
 
     // Draw current number
-    drawDigit(static_cast<int>(current + 1), labelX, labelY, digitSize);
+    drawDigits(currentStr, labelX, labelY, digitSize);
 
     // Draw slash '/'
-    drawSlash(labelX + digitSize + 10.0f, labelY, digitSize);
+    drawSlash(labelX + currentWidth, labelY, digitSize); // Adjust position to account for space
 
     // Draw total number
-    drawDigit(static_cast<int>(total), labelX + digitSize + 50.0f, labelY, digitSize);
+    drawDigits(totalStr, labelX * 2 + currentWidth + spaceBetween * 2, labelY, digitSize);
 }
 
+// Helper function to draw multiple digits
+void View::drawDigits(const std::string& digits, float x, float y, float digitSize)
+{
+    for (char digit : digits)
+    {
+        // Assuming drawDigit is a method that takes the digit character and draws it
+        drawDigit(digit - '0', x, y, digitSize); // Convert char to int
+        x += digitSize; // Move x position for the next digit
+    }
+}
+
+
+
 // Helper function to draw individual digits using lines
-void View::drawDigit(int digit, float x, float y, float size)
+void View::drawDigit(int number, float x, float y, float size)
 {
     // Each digit is represented by 7 segments
-    // Segment indices:
-    //  0
-    // ---
-    // 1 | 2
-    // ---
-    // 3 | 4
-    // ---
-    // 5 | 6
-    // ---
-    // 7 | 8
-    // ---
-    // 9 |10
+    bool segments[10][7] =
+            {
+                    {true, true, true, false, true, true, true}, // 0
+                    {false, false, true, false, false, true, false}, // 1
+                    {true, false, true, true, true, false, true}, // 2
+                    {true, false, true, true, false, true, true}, // 3
+                    {false, true, true, true, false, true, false}, // 4
+                    {true, true, false, true, false, true, true}, // 5
+                    {true, true, false, true, true, true, true}, // 6
+                    {true, false, true, false, false, true, false}, // 7
+                    {true, true, true, true, true, true, true}, // 8
+                    {true, true, true, true, false, true, true} // 9
+            };
 
-    // Define which segments are on for each digit
-    bool segments[10][7] = {
-            //0
-            {true, true, true, false, true, true, true},
-            //1
-            {false, false, true, false, false, true, false},
-            //2
-            {true, false, true, true, true, false, true},
-            //3
-            {true, false, true, true, false, true, true},
-            //4
-            {false, true, true, true, false, true, false},
-            //5
-            {true, true, false, true, false, true, true},
-            //6
-            {true, true, false, true, true, true, true},
-            //7
-            {true, false, true, false, false, true, false},
-            //8
-            {true, true, true, true, true, true, true},
-            //9
-            {true, true, true, true, false, true, true}
-    };
-
-    if (digit < 0 || digit > 9)
-        return;
-
-    // Define segment positions relative to (x, y)
+    // Convert the number to a string to handle multi-digit numbers
+    std::string numberStr = std::to_string(number);
     float thickness = size / 10.0f;
     float length = size * 0.6f;
 
-    // Define the 7 segments as lines
-    std::vector<sf::RectangleShape> segmentShapes;
-
-    // Segment 0: Top horizontal
-    if (segments[digit][0])
+    // Draw each digit in the number
+    for (size_t i = 0; i < numberStr.length(); ++i)
     {
-        sf::RectangleShape seg(sf::Vector2f(length, thickness));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x, y);
-        segmentShapes.push_back(seg);
-    }
+        int digit = numberStr[i] - '0'; // Convert character to int
+        float offsetX = i * (length + thickness * 2); // Calculate offset for each digit
 
-    // Segment 1: Top-left vertical
-    if (segments[digit][1])
-    {
-        sf::RectangleShape seg(sf::Vector2f(thickness, length));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x, y + thickness);
-        segmentShapes.push_back(seg);
-    }
+        // Add segments based on the digit
+        std::vector<sf::RectangleShape> segmentShapes;
 
-    // Segment 2: Top-right vertical
-    if (segments[digit][2])
-    {
-        sf::RectangleShape seg(sf::Vector2f(thickness, length));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x + length - thickness, y + thickness);
-        segmentShapes.push_back(seg);
-    }
+        if (segments[digit][0])
+        {
+            sf::RectangleShape seg(sf::Vector2f(length, thickness));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX, y);
+            segmentShapes.push_back(seg);
+        }
+        if (segments[digit][1])
+        {
+            sf::RectangleShape seg(sf::Vector2f(thickness, length));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX, y + thickness);
+            segmentShapes.push_back(seg);
+        }
+        if (segments[digit][2])
+        {
+            sf::RectangleShape seg(sf::Vector2f(thickness, length));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX + length - thickness, y + thickness);
+            segmentShapes.push_back(seg);
+        }
+        if (segments[digit][3])
+        {
+            sf::RectangleShape seg(sf::Vector2f(length, thickness));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX, y + length + thickness);
+            segmentShapes.push_back(seg);
+        }
+        if (segments[digit][4])
+        {
+            sf::RectangleShape seg(sf::Vector2f(thickness, length));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX, y + 2 * length + 2 * thickness - 18.0f);
+            segmentShapes.push_back(seg);
+        }
+        if (segments[digit][5])
+        {
+            sf::RectangleShape seg(sf::Vector2f(thickness, length));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX + length - thickness, y + 2 * length + 2 * thickness - 18.0f);
+            segmentShapes.push_back(seg);
+        }
+        if (segments[digit][6])
+        {
+            sf::RectangleShape seg(sf::Vector2f(length, thickness));
+            seg.setFillColor(labelColor);
+            seg.setPosition(x + offsetX, y + 3 * length + 3 * thickness - 22.0f);
+            segmentShapes.push_back(seg);
+        }
 
-    // Segment 3: Middle horizontal
-    if (segments[digit][3])
-    {
-        sf::RectangleShape seg(sf::Vector2f(length, thickness));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x, y + length + thickness);
-        segmentShapes.push_back(seg);
-    }
-
-    // Segment 4: Bottom-left vertical
-    if (segments[digit][4])
-    {
-        sf::RectangleShape seg(sf::Vector2f(thickness, length));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x, y + 2 * length + 2 * thickness - 18.0f); // Adjusted position to raise it
-        segmentShapes.push_back(seg);
-    }
-
-    // Segment 5: Bottom-right vertical
-    if (segments[digit][5])
-    {
-        sf::RectangleShape seg(sf::Vector2f(thickness, length));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x + length - thickness, y + 2 * length + 2 * thickness - 18.0f); // Adjusted position to raise it
-        segmentShapes.push_back(seg);
-    }
-
-    // Segment 6: Bottom horizontal
-    if (segments[digit][6])
-    {
-        sf::RectangleShape seg(sf::Vector2f(length, thickness));
-        seg.setFillColor(labelColor);
-        seg.setPosition(x, y + 3 * length + 3 * thickness - 22.0f); // Adjusted position to raise it
-        segmentShapes.push_back(seg);
-    }
-
-    // Draw all active segments
-    for (const auto& seg : segmentShapes)
-    {
-        window.draw(seg);
+        // Draw all active segments for this digit
+        for (const auto& seg : segmentShapes)
+        {
+            window.draw(seg);
+        }
     }
 }
+
+
 
 // Helper function to draw the slash '/' with correct orientation and size
 void View::drawSlash(float x, float y, float size)
@@ -312,7 +304,7 @@ void View::drawConfirmationDialog(int selectedButton)
     window.draw(yDiagonal2);
 
     // Position for "No" button label
-    float noLabelX = noButton.getPosition().x + 30.0f;
+    float noLabelX = noButton.getPosition().x + 40.0f;
     float noLabelY = noButton.getPosition().y + 15.0f;
 
     // Draw "N"

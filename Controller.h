@@ -16,6 +16,8 @@ public:
     void run();
 
 private:
+    sf::Vector2f previousMousePos;
+
     Model model;
     View view;
 };

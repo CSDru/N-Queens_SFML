@@ -10,9 +10,9 @@ Model::Model(int size)
 {
 }
 
-bool Model::solve(int col)
+bool Model::solve(int row)
 {
-    if (col >= N)
+    if (row >= N)
     {
         solutions.push_back(board);
         return true;
@@ -20,11 +20,11 @@ bool Model::solve(int col)
     bool res = false;
     for (int i = 0; i < N; ++i)
     {
-        if (isSafe(i, col))
+        if (isSafe(row, i))
         {
-            board[col] = i;
-            res = solve(col + 1) || res;
-            board[col] = -1;
+            board[row] = i;
+            res = solve(row + 1) || res;
+            board[row] = -1;
         }
     }
     return res;
@@ -42,10 +42,10 @@ const std::vector<int>& Model::getBoard() const
 
 bool Model::isSafe(int row, int col)
 {
-    for (int c = 0; c < col; ++c)
+    for (int r = 0; r < row; ++r)
     {
-        int r = board[c];
-        if (r == row || std::abs(r - row) == std::abs(c - col))
+        int c = board[r];
+        if (c == col || std::abs(c - col) == std::abs(r - row))
             return false;
     }
     return true;

@@ -16,12 +16,8 @@ class View
 {
 public:
     View(int size, int windowSize = 600);
-
-    // Updated draw method to include solution label and optional confirmation dialog
     void draw(const std::vector<int>& board, size_t current, size_t total, bool showDialog = false, int selectedButton = 0);
-
     bool isOpen() const;
-
     std::vector<sf::Event> handleEvents();
 
     // Methods to check if mouse is over a button
@@ -34,25 +30,18 @@ private:
     int N;
     float cellSize;
     sf::RenderWindow window;
-    sf::Color white;
-    sf::Color black;
-    sf::Color queenColor;
-    sf::Color labelColor;
-    sf::Color buttonColor;
-    sf::Color buttonHoverColor;
-    sf::Color outlineColor;
 
-    // Buttons for confirmation dialog
-    sf::RectangleShape yesButton;
-    sf::RectangleShape noButton;
+    sf::Color white, black, queenColor, labelColor, buttonColor, buttonHoverColor, outlineColor;
+    sf::RectangleShape yesButton, noButton;
 
-    // Button labels (using simple lines and shapes)
+    // Drawing functions
     void drawBoard();
     void drawQueens(const std::vector<int>& board);
     void drawLabel(size_t current, size_t total);
     void drawDigit(int digit, float x, float y, float size);
     void drawSlash(float x, float y, float size);
-    void drawConfirmationDialog(int selectedButton);
+    void drawDigits(const std::string& digits, float x, float y, float digitSize);
+    void drawConfirmationDialog(int selectedButton); // Add this line
 };
 
 #endif // VIEW_H

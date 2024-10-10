@@ -12,7 +12,7 @@ class Model
 public:
     Model(int size);
 
-    bool solve(int col = 0);
+    bool solve(int row = 0);
 
     const std::vector<std::vector<int>>& getSolutions() const;
 

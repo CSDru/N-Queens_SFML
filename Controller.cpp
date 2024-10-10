@@ -14,6 +14,7 @@ Controller::Controller(int size)
 
 void Controller::run()
 {
+    previousMousePos = {0, 0};
     if (!model.solve())
     {
         std::cout << "No solutions found for N = " << model.getBoard().size() << std::endl;
@@ -25,7 +26,7 @@ void Controller::run()
     size_t total = solutions.size();
 
     bool showDialog = false;
-    int selectedButton = 0; // 0: Yes, 1: No
+    int selectedButton = -1; // 0: Yes, 1: No
 
     while (view.isOpen())
     {
@@ -36,7 +37,6 @@ void Controller::run()
             if (event.type == sf::Event::Closed)
             {
                 showDialog = true;
-                selectedButton = 0;
             }
             else if (event.type == sf::Event::KeyPressed)
             {
@@ -53,7 +53,6 @@ void Controller::run()
                     else if (event.key.code == sf::Keyboard::Escape)
                     {
                         showDialog = true;
-                        selectedButton = 0;
                     }
                 }
                 else
@@ -103,10 +102,21 @@ void Controller::run()
             }
             else if (event.type == sf::Event::MouseMoved)
             {
-                if (showDialog)
+                sf::Vector2f mousePos = view.getWindow().mapPixelToCoords(sf::Mouse::getPosition(view.getWindow()));
+                if(mousePos != previousMousePos)
                 {
-                    sf::Vector2f mousePos = view.getWindow().mapPixelToCoords(sf::Mouse::getPosition(view.getWindow()));
-                    selectedButton = view.isMouseOverButton(mousePos, view.getYesButton()) ? 0 : 1;
+                    if (showDialog)
+                    {
+                        if (view.isMouseOverButton(mousePos, view.getYesButton()))
+                            selectedButton = 0;
+                        else if (view.isMouseOverButton(mousePos, view.getNoButton()))
+                            selectedButton = 1;
+                        else
+                            selectedButton = -1;
+                    }
+
+                    // Update the previous mouse position
+                    previousMousePos = mousePos;
                 }
             }
         }
@@ -121,6 +131,6 @@ void Controller::run()
             view.draw(solutions[current], current, total, true, selectedButton);
         }
 
-        sf::sleep(sf::milliseconds(10)); // Optional: limit the loop
+        sf::sleep(sf::milliseconds(10)); // limit the loop
     }
 }
